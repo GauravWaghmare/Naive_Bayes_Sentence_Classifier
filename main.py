@@ -24,6 +24,7 @@ class Proto(object):
 		self.res = responses()
 		self.stems = []
 		self.word_pos = dict()
+		self.stemmer = PorterStemmer()
 
 	# Read the CSV file into a list of lists
 	def read_data(self):
@@ -55,11 +56,9 @@ class Proto(object):
 	# Change all tokens to their respective stems
 	def stemify(self):
 		sentences = self.tokenize()
-		print("Sentences ", len(sentences))
-		stemmer = PorterStemmer()
 		for sentence in sentences:
-			stem = [stemmer.stem(word) for word in sentence]
-	    	self.stems.append(stem)
+			stem = [self.stemmer.stem(word) for word in sentence]
+			self.stems.append(stem)
 
 	# Construct vocabulary
 	def build_voc(self):
@@ -81,12 +80,10 @@ class Proto(object):
 		i = 0
 		for word in vocab_arr:
 			self.word_pos[word] = i
-	    	i += 1
+			i += 1
 
 	def populateX(self):
 		X = np.zeros((self.no_ques, self.no_words))
-		print(len(self.stems))
-		print(self.no_ques)
 		for i in range(self.no_ques):
 			for word in self.stems[i]:
 				X[i, self.word_pos[word]] += 1
@@ -94,8 +91,8 @@ class Proto(object):
 
 	def populateY(self):
 		Y = np.zeros((self.no_ques))
-		data = read_data(file_path)
-		for i in range(no_ques):
+		data = self.read_data()
+		for i in range(self.no_ques):
 			Y[i] = data[i][1]
 		return Y
 
@@ -108,29 +105,25 @@ class Proto(object):
 	def vector(self, string):
 	    string = string.lower()
 	    tokens = nltk.word_tokenize(string)
-	    stems = [stemmer.stem(word) for word in tokens]
+	    stems = [self.stemmer.stem(word) for word in tokens]
 	    vec = np.zeros((1, self.no_words))
 	    for stem in stems:
-	        vec[0][self.word_pos[stem]] += 1
+	    	vec[0][self.word_pos[stem]] += 1
 	    return vec
 
 	def respond(self):
 	    ask = raw_input()
-	    vec = vector(ask)
+	    vec = self.vector(ask)
 	    no = self.clf.predict(vec)[0]
 	    no = int(no)
-	    print (res[no])
+	    print (self.res[no])
 
 def __main__():
 	proto = Proto()
 	proto.train()
-	ans = "Yes"
-	while ans=="yes":
-		print("Please input your query")
-		proto.respond()
-		print()
-		print("Do you have any more queries?")
-		ans = raw_input()
+	print("Please input your query")
+	proto.respond()
+	print()
 
 __main__()
 
