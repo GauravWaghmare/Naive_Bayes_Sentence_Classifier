@@ -15,16 +15,14 @@ from res_map import responses
 class Proto(object):
 
 	def __init__(self):
-		self.X = np.zeros((no_ques, no_words))
-		self.Y = np.zeros((no_ques))
+		self.no_ques = 0
+		self.no_words = 0
 		self.clf = MultinomialNB()
 		self.res = responses()
-		self.sentences = []
 		self.vocab = dict()
 
 	# Read the CSV file into a list of lists
-	def read_data():
-		file_path = ""
+	def read_data(self, file_path):
 		data = []
 		with open(file_path) as csvfile:
 	    	spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -32,7 +30,7 @@ class Proto(object):
 	        	data.append(row)
 		# Remove the first row
 		data = data[1:]
-		self.Y = np.zeros((len(data)))
+		self.no_ques = len(data)
 		return data
 
 	# Change all characters to lower case
@@ -45,20 +43,25 @@ class Proto(object):
 	# Change all sentences to tokens
 	def tokenize(self):
 		data = lower_case()
-		for element in self.data:
-	    	self.sentences.append(nltk.word_tokenize(element[0]))
+		sentences = []
+		for element in data:
+	    	sentences.append(nltk.word_tokenize(element[0]))
+	    return sentences
 
 	# Change all tokens to their respective stems
-	def stemify(self):
+	def stemify():
 		stems = []
+		sentences = tokenize()
 		from nltk.stem.porter import *
 		stemmer = PorterStemmer()
 		for sentence in sentences:
 	    	stem = [stemmer.stem(word) for word in sentence]
 	    	stems.append(stem)
+	    return stems
 
 	# Construct vocabulary
 	def build_voc(self):
+		sentences = stemify()
 		vocab_size = 0
 		for i in self.sentences:
 	    	for ii in i:
