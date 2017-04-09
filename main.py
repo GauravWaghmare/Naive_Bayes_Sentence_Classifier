@@ -15,34 +15,36 @@ from res_map import responses
 class Proto(object):
 
 	def __init__(self):
-		self.no_ques = 0
-		self.no_words = 0
 		self.X = np.zeros((no_ques, no_words))
 		self.Y = np.zeros((no_ques))
 		self.clf = MultinomialNB()
 		self.res = responses()
-		self.data = []
 		self.sentences = []
 		self.vocab = dict()
 
 	# Read the CSV file into a list of lists
-	def read_data(self, file_path):
+	def read_data():
+		file_path = ""
+		data = []
 		with open(file_path) as csvfile:
 	    	spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
 	    	for row in spamreader:
-	        	self.data.append(row)
+	        	data.append(row)
 		# Remove the first row
-		self.data = self.data[1:]
-		self.no_ques = len(data)
-		self.Y = np.zeros((no_ques))
+		data = data[1:]
+		self.Y = np.zeros((len(data)))
+		return data
 
 	# Change all characters to lower case
 	def lower_case(self):
+		data = read_data()
 		for element in self.data:
 	    	element[0] = element[0].lower()
+	    return data
 
 	# Change all sentences to tokens
-	def tokenize(self): 
+	def tokenize(self):
+		data = lower_case()
 		for element in self.data:
 	    	self.sentences.append(nltk.word_tokenize(element[0]))
 
@@ -63,7 +65,7 @@ class Proto(object):
 	        	vocab[ii] = 1
 		vocab_size = len(self.vocab)
 		self.no_words = vocab_size
-		self.X = np.zeros((self.no_ques, self.no_words))
+		self.X = np.zeros((len(data), vocab_size))
 		return vocab
 
 	# Construct a map to store position of each word in the vocabulary
