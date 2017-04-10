@@ -5,6 +5,7 @@ import csv
 from nltk.stem import *
 import nltk
 from nltk.stem.porter import *
+from nltk.corpus import wordnet as wn
 
 import numpy as np
 import scipy
@@ -23,6 +24,7 @@ class Proto(object):
 		self.clf = MultinomialNB()
 		self.res = responses()
 		self.stems = []
+		self.sentences = []
 		self.word_pos = dict()
 		self.stemmer = PorterStemmer()
 
@@ -48,10 +50,10 @@ class Proto(object):
 	# Change all sentences to tokens
 	def tokenize(self):
 		data = self.lower_case()
-		sentences = []
+		# sentences = []
 		for element in data:
-			sentences.append(nltk.word_tokenize(element[0]))
-		return sentences
+			self.sentences.append(nltk.word_tokenize(element[0]))
+		# return sentences
 
 	# Change all tokens to their respective stems
 	def stemify(self):
@@ -63,9 +65,12 @@ class Proto(object):
 	# Construct vocabulary
 	def build_voc(self):
 		vocab = dict()
-		sentences = self.stemify()
+		# sentences = self.stemify()
+		# sentence = self.tokenize()
+		self.tokenize()
 		vocab_size = 0
-		for i in self.stems:
+		# for i in self.stems:
+		for i in self.sentences:
 			for ii in i:
 				vocab[ii] = 1
 		vocab_size = len(vocab)
@@ -85,7 +90,8 @@ class Proto(object):
 	def populateX(self):
 		X = np.zeros((self.no_ques, self.no_words))
 		for i in range(self.no_ques):
-			for word in self.stems[i]:
+			# for word in self.stems[i]:
+			for word in self.sentences[i]:
 				X[i, self.word_pos[word]] += 1
 		return X
 
@@ -108,21 +114,31 @@ class Proto(object):
 	    stems = [self.stemmer.stem(word) for word in tokens]
 	    vec = np.zeros((1, self.no_words))
 	    for stem in stems:
-	    	vec[0][self.word_pos[stem]] += 1
-	    return vec
+	    	if stem in self.word_pos:
+	    		vec[0][self.word_pos[stem]] += 1
+	    		return vec
+	    	else:
+	    		s = wn.synsets(stem)
+	    		if len(s)>0:
+	    			for ss in s:
+		    			name, _, __ = ss.name().split('.')
+		    			if name in self.word_pos:
+		    				vec[0][self.word_pos[name]] += 1
+		    				return vec
+		return vec
 
 	def respond(self):
 	    ask = raw_input()
 	    vec = self.vector(ask)
 	    no = self.clf.predict(vec)[0]
 	    no = int(no)
-	    print (self.res[no])
+	    return self.res[no]
 
 def __main__():
 	proto = Proto()
 	proto.train()
 	print("Please input your query")
-	proto.respond()
+	print(proto.respond())
 	print()
 
 __main__()
